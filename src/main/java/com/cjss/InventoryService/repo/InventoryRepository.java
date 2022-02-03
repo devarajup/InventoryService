@@ -20,4 +20,6 @@ public interface InventoryRepository extends JpaRepository<InventoryEntity, Inte
     @Transactional
     @Query("UPDATE InventoryEntity  SET quantityAvailable = :quantityAvailable WHERE skuCode=:skuCode")
     Integer upadateInventory(Integer skuCode,Integer quantityAvailable);
+
+    boolean existsBySkuCode(Integer skuCode);
 }

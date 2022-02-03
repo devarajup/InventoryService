@@ -1,41 +1,53 @@
 package com.cjss.InventoryService.service;
 
 import com.cjss.InventoryService.entity.InventoryEntity;
+import com.cjss.InventoryService.model.InventoryModel;
 import com.cjss.InventoryService.repo.InventoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class InventoryService {
     @Autowired
     private InventoryRepository repository;
+    private RestTemplate rt = new RestTemplate();
 
+    public String addInventory(InventoryModel model) {
+        String uri = "http://localhost:8082/get-sku/" + model.getSkuCode();
 
-    public Optional<Integer> get(){
-        return repository.findSkuCode(1);
-    }
-    public Integer addQuantity(Integer skucode, Integer qty){
-        if (repository.getBySkuCode(skucode)==null) {
-            return   repository.save(new InventoryEntity(skucode,qty)).getQuantityAvailable();
+        ResponseEntity<Boolean> res = rt.getForEntity(uri, Boolean.class);
+        if (res.getBody() != true)
+            return "sku code not exist";
+
+        if (repository.getBySkuCode(model.getSkuCode()) == null) {
+            return repository.save(new InventoryEntity(model.getSkuCode(), model.getQuantityAvailable())).getQuantityAvailable() + "quantity added to " + model.getSkuCode();
         }
-        Integer qtyA = getQuantity(skucode);
-        qtyA=qtyA+qty;
-        return   repository.upadateInventory(skucode,qtyA);
+        Integer qtyA = getQuantity(model.getSkuCode());
+        qtyA = qtyA + model.getQuantityAvailable();
+        repository.upadateInventory(model.getSkuCode(), qtyA);
+        return " Total quantity available " + qtyA;
 
     }
-    public Integer quantityAfterOrder(Integer skucode, Integer qty){
-        if (repository.getBySkuCode(skucode).getQuantityAvailable()<qty) {
-            return   0;
+
+    public InventoryModel placeOrder(InventoryModel model) {
+        if (repository.existsBySkuCode(model.getSkuCode())!=true)
+            return new InventoryModel();
+
+        if (repository.getBySkuCode(model.getSkuCode()).getQuantityAvailable() < model.getQuantityAvailable()) {
+            return new InventoryModel();
         }
-        Integer qtyA = getQuantity(skucode);
-        qtyA=qtyA-qty;
-        return   repository.upadateInventory(skucode,qtyA);
+        Integer qtyA = getQuantity(model.getSkuCode());
+        qtyA = qtyA - model.getQuantityAvailable();
+        repository.upadateInventory(model.getSkuCode(), qtyA);
+        InventoryEntity entity=repository.getBySkuCode(model.getSkuCode());
+        System.out.println(entity.getSkuCode());
+        return new InventoryModel(entity.getSkuCode(),entity.getQuantityAvailable());
 
     }
 
-    private Integer getQuantity(Integer skucode){
+    public Integer getQuantity(Integer skucode) {
         return repository.getBySkuCode(skucode).getQuantityAvailable();
 
     }

@@ -17,7 +17,7 @@ public class InventoryEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
-
+    @Column(unique = true)
     private Integer skuCode;
     private Integer quantityAvailable;
 
