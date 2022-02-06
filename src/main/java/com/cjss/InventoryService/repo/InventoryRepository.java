@@ -10,7 +10,7 @@ import javax.transaction.Transactional;
 import java.util.Optional;
 
 @Repository
-public interface InventoryRepository extends JpaRepository<InventoryEntity, Integer> {
+public interface InventoryRepository extends JpaRepository<InventoryEntity, String> {
     @Query(value = "SELECT sku_code FROM ecommerce_project_db.product_sku_table where sku_code = :sku", nativeQuery = true)
     Optional<Integer> findSkuCode(Integer sku);
 
